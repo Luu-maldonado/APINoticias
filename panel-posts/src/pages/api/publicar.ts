@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Preparar autenticación básica
-    const auth = Buffer.from(`${process.env.WP_USER}:${process.env.WP_APP_PASSWORD}`).toString('base64');
+    const auth = Buffer.from(`${process.env.WP_USER}:k24W eaXX aRIK wzdC DSHM D6Qz`).toString('base64');
 
     console.log("🔍 Recibido:", { titulo, extracto, tieneImagen: !!imagenBase64 });
     // Subir imagen destacada
@@ -51,6 +51,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const postData = await postRes.json();
+    // 🔗 Forzar adjuntar la imagen al post
+await fetch(`${process.env.WP_URL}/wp-json/wp/v2/media/${mediaData.id}`, {
+  method: 'POST',
+  headers: {
+    Authorization: `Basic ${auth}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    post: postData.id,  // 👈 Ancla la imagen al post
+  }),
+});
+
     console.log("📝 Respuesta /posts:", postRes.status, postData);
 
     if (!postRes.ok) {
