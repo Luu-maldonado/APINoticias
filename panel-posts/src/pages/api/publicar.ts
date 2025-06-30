@@ -11,10 +11,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Preparar autenticación básica
-    const auth = Buffer.from(
-      `${process.env.WP_USER}:${process.env.WP_APP_PASSWORD}`
-    ).toString('base64');
+    const auth = Buffer.from(`${process.env.WP_USER}:${process.env.WP_APP_PASSWORD}`).toString('base64');
 
+    console.log("🔍 Recibido:", { titulo, extracto, tieneImagen: !!imagenBase64 });
     // Subir imagen destacada
     const uploadRes = await fetch(`${process.env.WP_URL}/wp-json/wp/v2/media`, {
       method: 'POST',
@@ -26,10 +25,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: Buffer.from(imagenBase64.split(',')[1], 'base64'),
     });
 
-    const imagenSubida = await uploadRes.json();
+    const mediaData = await uploadRes.json();
+    console.log("📸 Respuesta /media:", uploadRes.status, mediaData);
+
+    //const imagenSubida = await uploadRes.json();
 
     if (!uploadRes.ok) {
-      return res.status(500).json({ message: 'Error al subir imagen', error: imagenSubida });
+      return res.status(500).json({ message: "Error al subir imagen", error: mediaData });
     }
 
     // Crear el post
@@ -44,18 +46,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         excerpt: extracto,
         content: contenido,
         status: 'publish', // o 'draft'
-        featured_media: imagenSubida.id,
+        featured_media: mediaData.id,
       }),
     });
 
-    const post = await postRes.json();
+    const postData = await postRes.json();
+    console.log("📝 Respuesta /posts:", postRes.status, postData);
 
     if (!postRes.ok) {
-      return res.status(500).json({ message: 'Error al crear post', error: post });
+      return res.status(500).json({ message: 'Error al crear post', error: postData });
     }
 
-    return res.status(200).json({ message: 'Post creado correctamente', post });
+    return res.status(200).json({ message: 'Post creado correctamente', postData });
   } catch (error) {
-    return res.status(500).json({ message: 'Error general', error });
+    console.error("🔥 ERROR GENERAL:", error);
+    return res.status(500).json({ message: "Error general", error: String(error) });
   }
 }

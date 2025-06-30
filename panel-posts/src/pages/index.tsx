@@ -74,7 +74,7 @@ export default function Home() {
         setImagenPreview(null);
       } else {
         console.error("Error al publicar:", data);
-        toast.error("Error al publicar el post.");
+        toast.error(`Error al publicar: ${data.message || "Error desconocido"}`);
       }
     } catch (error) {
       console.error("Error al comprimir imagen:", error);
